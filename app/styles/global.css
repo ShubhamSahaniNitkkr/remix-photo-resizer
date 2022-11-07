@@ -61,3 +61,26 @@ div.content {
   margin-left: 20%;
   padding: 10px;
 }
+
+.post-card {
+  border: 1px solid gainsboro;
+  margin: 10px 0;
+  padding: 10px;
+}
+
+.post-card:hover {
+  background: whitesmoke;
+  cursor: pointer;
+}
+
+.btn {
+  background: gainsboro;
+  color: black;
+  padding: 10px 20px;
+}
+
+.flexBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
