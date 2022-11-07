@@ -49,3 +49,14 @@ const Layout = ({ children }) => {
     </>
   );
 };
+
+export function ErrorBoundary({ error }) {
+  console.log(error);
+  return (
+    <Document>
+      <Layout>
+        <p>{error.message}</p>
+      </Layout>
+    </Document>
+  );
+}
