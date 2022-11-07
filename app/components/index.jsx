@@ -1,2 +1,3 @@
 import Sidebar from "./Sidebar";
-export { Sidebar };
+import Layout from "./Layout";
+export { Sidebar, Layout };

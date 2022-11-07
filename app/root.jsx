@@ -1,17 +1,29 @@
-import { Outlet, LiveReload, Links, Meta } from "remix";
-import { Sidebar } from "./components";
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "@remix-run/react";
+// import { theme } from "./theme";
+import { Layout } from "./components";
+import { MantineProvider, createEmotionCache } from "@mantine/core";
+import { StylesPlaceholder } from "@mantine/remix";
 import globalStyles from "~/styles/global.css";
 
 const isDevMode = process.env.NODE_ENV === "development";
 export const links = () => [{ rel: "stylesheet", href: globalStyles }];
 export const meta = () => {
-  const description = "Remix Photo booth using remix framework, mantine ";
-  const keywords = "react , remix , mantine , AWS S3 , crop Image";
   return {
-    description,
-    keywords,
+    description: "Remix Photo booth using remix framework, mantine ",
+    keywords: "react , remix , mantine , AWS S3 , crop Image",
+    charset: "utf-8",
+    title: "New Remix App",
+    viewport: "width=device-width,initial-scale=1",
   };
 };
+createEmotionCache({ key: "mantine" });
 
 export default function App() {
   return (
@@ -27,6 +39,7 @@ const Document = ({ children, title }) => {
   return (
     <html lang="en">
       <head>
+        <StylesPlaceholder />
         <Links />
         <Meta />
         <meta charSet="UTF-8" />
@@ -35,18 +48,16 @@ const Document = ({ children, title }) => {
       </head>
       <body>
         {children}
-        {isDevMode ? <LiveReload /> : null}
+        {isDevMode ? (
+          <>
+            <Outlet />
+            <ScrollRestoration />
+            <Scripts />
+            <LiveReload />
+          </>
+        ) : null}
       </body>
     </html>
-  );
-};
-
-const Layout = ({ children }) => {
-  return (
-    <>
-      <Sidebar />
-      <div className="page">{children}</div>
-    </>
   );
 };
 
