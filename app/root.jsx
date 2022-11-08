@@ -19,7 +19,7 @@ export const meta = () => {
     description: "Remix Photo booth using remix framework, mantine ",
     keywords: "react , remix , mantine , AWS S3 , crop Image",
     charset: "utf-8",
-    title: "New Remix App",
+    title: "Inkpen | Photo Editor",
     viewport: "width=device-width,initial-scale=1",
   };
 };
@@ -50,7 +50,6 @@ const Document = ({ children, title }) => {
         {children}
         {isDevMode ? (
           <>
-            <Outlet />
             <ScrollRestoration />
             <Scripts />
             <LiveReload />

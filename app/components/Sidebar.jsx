@@ -1,38 +1,34 @@
 import { useState } from "react";
-import { createStyles, Navbar } from "@mantine/core";
+import { createStyles, Navbar, Flex, Text } from "@mantine/core";
 import {
-  IconBellRinging,
-  IconFingerprint,
-  IconKey,
-  IconSettings,
-  Icon2fa,
-  IconDatabaseImport,
-  IconReceipt2,
-  IconSwitchHorizontal,
+  IconCalendarEvent,
+  IconId,
+  IconUser,
   IconLogout,
+  IconUserCircle,
 } from "@tabler/icons";
+
+import { userInfo, brandName } from "../data";
 
 const useStyles = createStyles((theme, _params, getRef) => {
   const icon = getRef("icon");
   return {
     header: {
-      paddingBottom: theme.spacing.md,
+      padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
+      paddingTop: theme.spacing.md * 1.5,
       marginBottom: theme.spacing.md * 1.5,
-      borderBottom: `1px solid ${
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[4]
-          : theme.colors.gray[2]
-      }`,
+      borderBottom: `1px solid ${theme.colors.gray[2]}`,
+    },
+
+    body: {
+      padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
+      marginBottom: theme.spacing.md * 1.5,
     },
 
     footer: {
       paddingTop: theme.spacing.md,
       marginTop: theme.spacing.md,
-      borderTop: `1px solid ${
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[4]
-          : theme.colors.gray[2]
-      }`,
+      borderTop: `1px solid ${theme.colors.gray[2]}`,
     },
 
     link: {
@@ -41,34 +37,30 @@ const useStyles = createStyles((theme, _params, getRef) => {
       alignItems: "center",
       textDecoration: "none",
       fontSize: theme.fontSizes.sm,
-      color:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[1]
-          : theme.colors.gray[7],
+      color: theme.colors.gray[7],
       padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
       borderRadius: theme.radius.sm,
       fontWeight: 500,
 
       "&:hover": {
-        backgroundColor:
-          theme.colorScheme === "dark"
-            ? theme.colors.dark[6]
-            : theme.colors.gray[0],
-        color: theme.colorScheme === "dark" ? theme.white : theme.black,
+        backgroundColor: theme.colors.gray[0],
+        color: theme.black,
 
         [`& .${icon}`]: {
-          color: theme.colorScheme === "dark" ? theme.white : theme.black,
+          color: theme.black,
         },
       },
     },
 
     linkIcon: {
       ref: icon,
-      color:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[2]
-          : theme.colors.gray[6],
+      color: theme.colors.gray[6],
       marginRight: theme.spacing.sm,
+    },
+
+    footerIcon: {
+      ref: icon,
+      color: theme.colors.dark[2],
     },
 
     linkActive: {
@@ -87,63 +79,85 @@ const useStyles = createStyles((theme, _params, getRef) => {
         },
       },
     },
+    linkTitle: {
+      letterSpacing: "2px",
+      fontSize: "12px",
+    },
   };
 });
 
-const data = [
-  { link: "", label: "Notifications", icon: IconBellRinging },
-  { link: "", label: "Billing", icon: IconReceipt2 },
-  { link: "", label: "Security", icon: IconFingerprint },
-  { link: "", label: "SSH Keys", icon: IconKey },
-  { link: "", label: "Databases", icon: IconDatabaseImport },
-  { link: "", label: "Authentication", icon: Icon2fa },
-  { link: "", label: "Other Settings", icon: IconSettings },
+const classesLinks = [{ link: "", label: "Schedule", icon: IconCalendarEvent }];
+
+const profileLinks = [
+  { link: "", label: "About", icon: IconUser },
+  { link: "", label: "Profile Picture", icon: IconId },
 ];
 
-export default Sidebar = () => {
+const Sidebar = () => {
   const { classes, cx } = useStyles();
   const [active, setActive] = useState("Billing");
+  const { name, email } = userInfo;
 
-  const links = data.map((item) => (
-    <a
-      className={cx(classes.link, {
-        [classes.linkActive]: item.label === active,
-      })}
-      href={item.link}
-      key={item.label}
-      onClick={(event) => {
-        event.preventDefault();
-        setActive(item.label);
-      }}
-    >
-      <item.icon className={classes.linkIcon} stroke={1.5} />
-      <span>{item.label}</span>
-    </a>
-  ));
+  const getLinks = (data) =>
+    data.map((item) => (
+      <a
+        className={cx(classes.link, {
+          [classes.linkActive]: item.label === active,
+        })}
+        href={item.link}
+        key={item.label}
+        onClick={(event) => {
+          event.preventDefault();
+          setActive(item.label);
+        }}
+      >
+        <item.icon className={classes.linkIcon} stroke={1.5} />
+        <span>{item.label}</span>
+      </a>
+    ));
 
   return (
     <Navbar height={700} width={{ sm: 300 }} p="md">
-      <Navbar.Section>{links}</Navbar.Section>
-
+      <Navbar.Section className={classes.header}>
+        <Flex mih={50} justify="flex-start" align="center" direction="row">
+          <img src="/assets/brand.svg" alt="My logo" />
+          <brand />
+          &nbsp;
+          <Text size="xl" weight={800}>
+            {brandName}
+          </Text>
+        </Flex>
+      </Navbar.Section>
+      <Navbar.Section grow className={classes.body}>
+        <a className={cx(classes.link)} href={null}>
+          <span className={classes.linkTitle}>CLASSES</span>
+        </a>
+        {getLinks(classesLinks)}
+        <a className={cx(classes.link)} href={null}>
+          <span className={classes.linkTitle}>PROFILE</span>
+        </a>
+        {getLinks(profileLinks)}
+      </Navbar.Section>
       <Navbar.Section className={classes.footer}>
-        <a
-          href="#"
-          className={classes.link}
-          onClick={(event) => event.preventDefault()}
+        <Flex
+          mih={50}
+          justify="space-around"
+          align="center"
+          direction="row"
+          wrap="wrap"
         >
-          <IconSwitchHorizontal className={classes.linkIcon} stroke={1.5} />
-          <span>Change account</span>
-        </a>
-
-        <a
-          href="#"
-          className={classes.link}
-          onClick={(event) => event.preventDefault()}
-        >
-          <IconLogout className={classes.linkIcon} stroke={1.5} />
-          <span>Logout</span>
-        </a>
+          <IconUserCircle size={45} className={classes.footerIcon} stroke={1} />
+          <Flex direction="column">
+            <Text>{name}</Text>
+            <Text lineClamp={1} size="sm" color="gray">
+              {email}
+            </Text>
+          </Flex>
+          <IconLogout size={25} className={classes.linkIcon} stroke={1.5} />
+        </Flex>
       </Navbar.Section>
     </Navbar>
   );
 };
+
+export default Sidebar;
