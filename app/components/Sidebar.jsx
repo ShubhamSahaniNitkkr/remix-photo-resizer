@@ -117,7 +117,7 @@ const Sidebar = () => {
     ));
 
   return (
-    <Navbar height={700} width={{ sm: 300 }} p="md">
+    <Navbar height={700} width={{ sm: 300, xs: 300 }} p="md">
       <Navbar.Section className={classes.header}>
         <Flex mih={50} justify="flex-start" align="center" direction="row">
           <img src="/assets/brand.svg" alt="My logo" />

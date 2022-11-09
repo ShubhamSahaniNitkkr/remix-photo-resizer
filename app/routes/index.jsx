@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   Card,
   Button,
@@ -19,7 +19,8 @@ import {
   IconCamera,
   IconPhoto,
 } from "@tabler/icons";
-import { generateDownload } from "../helpers";
+import getCroppedImg, { dataURLtoFile, generateDownload } from "../helpers";
+import { generateUploadURL } from "../s3.js";
 
 import { profilePicGuide, sliderMarks } from "../data";
 
@@ -60,6 +61,12 @@ const useStyles = createStyles((theme, _params) => {
     cropperBox: {
       height: "60vh",
     },
+    cropperBox: {
+      height: "60vh",
+    },
+    selfieBox: {
+      height: "71vh",
+    },
     sliderBox: {
       padding: "10px",
     },
@@ -68,10 +75,14 @@ const useStyles = createStyles((theme, _params) => {
 
 const Home = () => {
   const { classes, cx } = useStyles();
+  const videoRef = useRef(null);
+  const photoRef = useRef(null);
   const [image, setImage] = useState(null);
   const [croppedArea, setCroppedArea] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [selfie, setSelfie] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedArea(croppedAreaPixels);
@@ -83,6 +94,7 @@ const Home = () => {
       reader.addEventListener("load", () => {
         setImage(reader.result);
       });
+      closeCamera();
     }
   };
 
@@ -93,7 +105,101 @@ const Home = () => {
     setZoom(1);
   };
 
+  const onUpload = async () => {
+    if (image) {
+      const canva = await getCroppedImg(image, croppedArea);
+      const canvaDataToURL = canva.toDataURL("image/jpeg");
+      const convertedURLToFile = dataURLtoFile(
+        canvaDataToURL,
+        "new-image.jpeg"
+      );
+
+      // const url = await generateUploadURL();
+      // console.log(url, "url");
+
+      // // post the image direclty to the s3 bucket
+      // await fetch(url, {
+      //   method: "PUT",
+      //   headers: {
+      //     "Content-Type": "multipart/form-data",
+      //   },
+      //   body: convertedURLToFile,
+      // });
+
+      // const imageUrl = url.split("?")[0];
+      // console.log(imageUrl);
+      // console.log("done");
+    }
+  };
+
   if (typeof window === "undefined") return null;
+
+  const getVideo = (isenabled = false) => {
+    navigator.mediaDevices
+      .getUserMedia({
+        video: {
+          width: window.innerWidth * 0.465,
+          height: window.innerHeight * 0.75,
+        },
+      })
+      .then((stream) => {
+        let video = videoRef.current;
+        let photo = photoRef.current;
+        if (isenabled) {
+          video.width = window.innerWidth * 0.465;
+          video.height = window.innerHeight * 0.75;
+        }
+        photo.width = 0;
+        photo.height = 0;
+        video.srcObject = stream;
+        video.play();
+      })
+      .catch((e) => console.log(e));
+  };
+
+  const takePhoto = () => {
+    const width = window.innerWidth * 0.465;
+    const height = window.innerHeight * 0.75;
+
+    let video = videoRef.current;
+    let photo = photoRef.current;
+
+    photo.width = width;
+    photo.height = height;
+
+    video.width = 0;
+    video.height = 0;
+
+    let ctx = photo.getContext("2d");
+    ctx.drawImage(video, 0, 0, width, height);
+    setImage(ctx);
+    setSelfie(true);
+  };
+
+  const closeCamera = () => {
+    let photo = photoRef.current;
+    let ctx = photo.getContext("2d");
+    ctx.clearRect(0, 0, photo.width, photo.height);
+    videoRef.current.srcObject.getTracks().forEach((track) => {
+      track.stop();
+    });
+    setSelfie(false);
+    setShowVideo(false);
+  };
+
+  const renderSelfieComponent = () => {
+    return (
+      <>
+        <Card shadow="sm" p="lg" radius="xs" className={classes.selfieBox}>
+          <Card.Section className={classes.cardBody}>
+            <canvas ref={photoRef} id="canvas" />
+            <video ref={videoRef} />
+          </Card.Section>
+        </Card>
+        <br />
+      </>
+    );
+  };
 
   const renderGuideCard = () => {
     return (
@@ -129,13 +235,29 @@ const Home = () => {
         <Flex justify="space-between" align="center" direction="row" gap={10}>
           <Button
             variant="filled"
-            color="violet"
+            color={showVideo ? (selfie ? "primary" : "green") : "violet"}
             className={classes.btn}
             size="sm"
             radius="xl"
             leftIcon={<IconCamera size={20} />}
+            onClick={() => {
+              if (showVideo) {
+                if (selfie) {
+                  getVideo(true);
+                } else {
+                  takePhoto();
+                  videoRef.current.srcObject.getTracks().forEach((track) => {
+                    track.stop();
+                  });
+                }
+              } else {
+                setShowVideo(true);
+                setImage(false);
+                getVideo();
+              }
+            }}
           >
-            Capture picture
+            {showVideo ? (selfie ? "Retake" : "Click") : "Capture picture"}
           </Button>
           <FileButton
             onChange={setImage}
@@ -183,6 +305,7 @@ const Home = () => {
             radius="xl"
             leftIcon={<IconCloudUpload size={20} />}
             disabled={!image}
+            onClick={onUpload}
           >
             Upload
           </Button>
@@ -293,7 +416,7 @@ const Home = () => {
       <Grid.Col span={8}>
         <Card shadow="sm" p="lg" radius="md" withBorder>
           {renderCardHeadings()}
-          {renderCropperContainer()}
+          {showVideo ? renderSelfieComponent() : renderCropperContainer()}
           {renderActionBtns()}
         </Card>
       </Grid.Col>
