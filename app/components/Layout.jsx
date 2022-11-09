@@ -1,6 +1,6 @@
 import React from "react";
 import Sidebar from "./Sidebar";
-import { AppShell, Header, Footer, Text } from "@mantine/core";
+import { AppShell, MantineProvider } from "@mantine/core";
 
 function Layout({ children }) {
   return (
@@ -12,11 +12,18 @@ function Layout({ children }) {
           background: "whitesmoke",
         },
         overflow: "hidden",
+        fontFamily: "Circular",
       }}
       fixed
     >
-      <Sidebar />
-      {children}
+      <MantineProvider
+        theme={{
+          fontFamily: "Circular",
+        }}
+      >
+        <Sidebar />
+        {children}
+      </MantineProvider>
     </AppShell>
   );
 }
