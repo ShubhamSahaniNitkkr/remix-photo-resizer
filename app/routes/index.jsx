@@ -36,6 +36,18 @@ const useStyles = createStyles((theme, _params) => {
       marginTop: "5px",
       fontWeight: 500,
     },
+    profileBox: {
+      "@media (max-width: 800px)": {
+        width: "90%",
+        marginLeft: "10%",
+      },
+    },
+    guideBox: {
+      "@media (max-width: 800px)": {
+        width: "90%",
+        marginLeft: "10%",
+      },
+    },
     guideTitle: {
       fontWeight: 900,
       marginBottom: theme.spacing.md * 1,
@@ -71,6 +83,11 @@ const useStyles = createStyles((theme, _params) => {
     },
     sliderBox: {
       padding: "10px",
+    },
+    parentBox: {
+      "@media (max-width: 800px)": {
+        flexDirection: "column",
+      },
     },
   };
 });
@@ -236,7 +253,7 @@ const Home = () => {
 
   const renderGuideCard = () => {
     return (
-      <Grid.Col span={4}>
+      <Grid.Col md={4} xs={10} sm={10} className={classes.guideBox}>
         <Card withBorder shadow="sm" radius="md">
           <Card.Section withBorder inheritPadding py="xs">
             <Group className={classes.guideTitle} position="apart">
@@ -264,8 +281,22 @@ const Home = () => {
 
   const renderActionBtns = () => {
     return (
-      <Flex justify="space-between" align="center" direction="row">
-        <Flex justify="space-between" align="center" direction="row" gap={10}>
+      <Flex
+        justify="space-between"
+        align="center"
+        direction={{ base: "column", sm: "row" }}
+      >
+        <Flex
+          justify="space-between"
+          align="center"
+          direction={{ base: "column", sm: "row" }}
+          gap={10}
+          sx={{
+            "@media (max-width: 755px)": {
+              marginBottom: 10,
+            },
+          }}
+        >
           <Button
             variant="filled"
             color={showVideo ? (selfie ? "primary" : "green") : "violet"}
@@ -313,7 +344,13 @@ const Home = () => {
             )}
           </FileButton>
         </Flex>
-        <Flex justify="space-between" align="center" direction="row" gap={10}>
+
+        <Flex
+          justify="space-between"
+          align="center"
+          direction={{ base: "column", sm: "row" }}
+          gap={10}
+        >
           <Button
             variant="filled"
             color="violet"
@@ -454,8 +491,8 @@ const Home = () => {
   };
 
   return (
-    <Grid>
-      <Grid.Col span={8}>
+    <Grid className={classes.parentBox}>
+      <Grid.Col md={8} xs={9} sm={9} className={classes.profileBox}>
         <Card shadow="sm" p="lg" radius="md" withBorder>
           {renderCardHeadings()}
           {showVideo ? renderSelfieComponent() : renderCropperContainer()}

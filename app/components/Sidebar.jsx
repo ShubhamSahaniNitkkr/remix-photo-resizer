@@ -13,6 +13,25 @@ import { userInfo, brandName } from "../data";
 const useStyles = createStyles((theme, _params, getRef) => {
   const icon = getRef("icon");
   return {
+    navbar: {
+      "@media (max-width: 800px)": {
+        width: "12%",
+        height: "100%",
+        padding: "0",
+        ".header": {
+          padding: "5px",
+        },
+        ".brand-name": {
+          display: "none",
+        },
+        "& span": {
+          display: "none",
+        },
+        "& div > a ": {
+          padding: "0",
+        },
+      },
+    },
     header: {
       padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
       paddingTop: theme.spacing.md * 1.5,
@@ -23,12 +42,20 @@ const useStyles = createStyles((theme, _params, getRef) => {
     body: {
       padding: `${theme.spacing.xs}px ${theme.spacing.sm}px`,
       marginBottom: theme.spacing.md * 1.5,
+      "@media (max-width: 800px)": {
+        padding: 0,
+        paddingLeft: "10px",
+        paddingTop: "10px",
+      },
     },
 
     footer: {
       paddingTop: theme.spacing.md,
       marginTop: theme.spacing.md,
       borderTop: `1px solid ${theme.colors.gray[2]}`,
+      "@media (max-width: 800px)": {
+        display: "none",
+      },
     },
 
     link: {
@@ -117,13 +144,13 @@ const Sidebar = () => {
     ));
 
   return (
-    <Navbar height={700} width={{ sm: 300, xs: 300 }} p="md">
-      <Navbar.Section className={classes.header}>
+    <Navbar width={{ sm: 300, xs: 30 }} className={classes.navbar} p="md">
+      <Navbar.Section className={cx(classes.header, "header")}>
         <Flex mih={50} justify="flex-start" align="center" direction="row">
           <img src="/assets/brand.svg" alt="My logo" />
           <brand />
           &nbsp;
-          <Text size="xl" weight={800}>
+          <Text size="xl" className="brand-name" weight={800}>
             {brandName}
           </Text>
         </Flex>
@@ -138,7 +165,7 @@ const Sidebar = () => {
         </a>
         {getLinks(profileLinks)}
       </Navbar.Section>
-      <Navbar.Section className={classes.footer}>
+      <Navbar.Section className={cx(classes.footer, "footer")}>
         <Flex
           mih={50}
           justify="space-around"
