@@ -1,6 +1,7 @@
 import React from "react";
 import Sidebar from "./Sidebar";
 import { AppShell, MantineProvider } from "@mantine/core";
+import { NotificationsProvider } from "@mantine/notifications";
 
 function Layout({ children }) {
   return (
@@ -21,8 +22,10 @@ function Layout({ children }) {
           fontFamily: "Circular",
         }}
       >
-        <Sidebar />
-        {children}
+        <NotificationsProvider>
+          <Sidebar />
+          {children}
+        </NotificationsProvider>
       </MantineProvider>
     </AppShell>
   );

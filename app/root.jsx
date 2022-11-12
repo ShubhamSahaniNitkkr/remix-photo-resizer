@@ -6,14 +6,13 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-// import { theme } from "./theme";
 import { Layout } from "./components";
 import { MantineProvider, createEmotionCache } from "@mantine/core";
 import { StylesPlaceholder } from "@mantine/remix";
 import globalStyles from "~/styles/global.css";
 
 const isDevMode = process.env.NODE_ENV === "development";
-export const links = () => [{ rel: "stylesheet", href: globalStyles }];
+export const links = () => [{ rel: "stylesheet", href: globalStyles }, {}];
 export const meta = () => {
   return {
     description: "Remix Photo booth using remix framework, mantine ",
@@ -44,6 +43,10 @@ const Document = ({ children, title }) => {
         <Meta />
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script
+          src="https://widget.cloudinary.com/v2.0/global/all.js"
+          type="text/javascript"
+        ></script>
         <title>{title ?? "Remix Photo booth"}</title>
       </head>
       <body>

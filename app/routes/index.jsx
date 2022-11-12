@@ -10,7 +10,9 @@ import {
   createStyles,
   Slider,
   FileButton,
+  Loader,
 } from "@mantine/core";
+import { showNotification, updateNotification } from "@mantine/notifications";
 import Cropper from "react-easy-crop";
 import {
   IconRotateDot,
@@ -18,9 +20,9 @@ import {
   IconDownload,
   IconCamera,
   IconPhoto,
+  IconCheck,
 } from "@tabler/icons";
 import getCroppedImg, { dataURLtoFile, generateDownload } from "../helpers";
-import { generateUploadURL } from "../s3.js";
 
 import { profilePicGuide, sliderMarks } from "../data";
 
@@ -43,8 +45,8 @@ const useStyles = createStyles((theme, _params) => {
       "& p": {
         margin: 0,
         fontSize: "13px",
-        borderBottom: "1px solid gainsboro",
-        paddingBottom: "10px",
+        borderBottom: "1px solid transparent",
+        paddingBottom: "5px",
         width: "100%",
       },
     },
@@ -83,11 +85,15 @@ const Home = () => {
   const [zoom, setZoom] = useState(1);
   const [selfie, setSelfie] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [uploadImageLink, setUploadImageLink] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
     setCroppedArea(croppedAreaPixels);
   }, []);
   const onChooseImage = (file) => {
+    setUploadImageLink(null);
+
     if (file) {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -107,54 +113,81 @@ const Home = () => {
 
   const onUpload = async () => {
     if (image) {
+      setUploading(true);
+      showNotification({
+        id: "load-data",
+        loading: true,
+        title: "Uploading your photo",
+        message: "Data will be loaded in some seconds,Please wait",
+        autoClose: false,
+        disallowClose: true,
+      });
       const canva = await getCroppedImg(image, croppedArea);
       const canvaDataToURL = canva.toDataURL("image/jpeg");
       const convertedURLToFile = dataURLtoFile(
         canvaDataToURL,
-        "new-image.jpeg"
+        `new-image-${Date()}.jpeg`
       );
 
-      // const url = await generateUploadURL();
-      // console.log(url, "url");
+      const CLOUDINARY_URL =
+        "https://api.cloudinary.com/v1_1/dvygreryl/image/upload";
+      const CLOUDINARY_UPLOAD_PRESET = "pjg5vhel";
 
-      // // post the image direclty to the s3 bucket
-      // await fetch(url, {
-      //   method: "PUT",
-      //   headers: {
-      //     "Content-Type": "multipart/form-data",
-      //   },
-      //   body: convertedURLToFile,
-      // });
+      const formData = new FormData();
+      formData.append("file", convertedURLToFile);
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
-      // const imageUrl = url.split("?")[0];
-      // console.log(imageUrl);
-      // console.log("done");
+      fetch(CLOUDINARY_URL, {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setUploading(false);
+          if (data.secure_url !== "") {
+            const uploadedFileUrl = data.secure_url;
+            setUploadImageLink(uploadedFileUrl);
+            resetFn();
+            updateNotification({
+              id: "load-data",
+              color: "teal",
+              title: "Your photo has been successfully uploaded",
+              message:
+                "Notification will close in 2 seconds, you can close this notification now",
+              icon: <IconCheck size={16} />,
+              autoClose: 2000,
+            });
+          }
+        })
+        .catch((err) => console.error(err));
     }
   };
 
   if (typeof window === "undefined") return null;
 
   const getVideo = (isenabled = false) => {
-    navigator.mediaDevices
-      .getUserMedia({
-        video: {
-          width: window.innerWidth * 0.465,
-          height: window.innerHeight * 0.75,
-        },
-      })
-      .then((stream) => {
-        let video = videoRef.current;
-        let photo = photoRef.current;
-        if (isenabled) {
-          video.width = window.innerWidth * 0.465;
-          video.height = window.innerHeight * 0.75;
-        }
-        photo.width = 0;
-        photo.height = 0;
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch((e) => console.log(e));
+    if (navigator) {
+      navigator.mediaDevices
+        .getUserMedia({
+          video: {
+            width: window.innerWidth * 0.465,
+            height: window.innerHeight * 0.75,
+          },
+        })
+        .then((stream) => {
+          let video = videoRef.current;
+          let photo = photoRef.current;
+          if (isenabled) {
+            video.width = window.innerWidth * 0.465;
+            video.height = window.innerHeight * 0.75;
+          }
+          photo.width = 0;
+          photo.height = 0;
+          video.srcObject = stream;
+          video.play();
+        })
+        .catch((e) => console.log(e));
+    }
   };
 
   const takePhoto = () => {
@@ -241,6 +274,7 @@ const Home = () => {
             radius="xl"
             leftIcon={<IconCamera size={20} />}
             onClick={() => {
+              setUploadImageLink(null);
               if (showVideo) {
                 if (selfie) {
                   getVideo(true);
@@ -293,7 +327,9 @@ const Home = () => {
                 ? "Click to download image"
                 : "Please click or upload image first"
             }
-            onClick={() => generateDownload(image, croppedArea)}
+            onClick={() => {
+              generateDownload(image, croppedArea);
+            }}
           >
             Download
           </Button>
@@ -303,7 +339,9 @@ const Home = () => {
             className={classes.btn}
             size="sm"
             radius="xl"
-            leftIcon={<IconCloudUpload size={20} />}
+            leftIcon={
+              uploading ? <Loader size={20} /> : <IconCloudUpload size={20} />
+            }
             disabled={!image}
             onClick={onUpload}
           >
@@ -336,7 +374,11 @@ const Home = () => {
             </div>
           </>
         ) : (
-          <Image height="60vh" src="./assets/no-image.jpg" alt="no-image" />
+          <Image
+            height="60vh"
+            src={uploadImageLink || "./assets/no-image.jpg"}
+            alt="no-image"
+          />
         )}
       </div>
     );
